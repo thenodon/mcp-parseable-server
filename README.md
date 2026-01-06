@@ -22,10 +22,9 @@ Ensure you have Go 1.20+ installed.
 
 ```sh
 git clone https://github.com/thenodon/mcp-parseable-server
-cd your-repo
+cd mcp-parseable-server
 # Build the MCP server binary
-cd cmd/mcp_parseable_server
-go build -o ../../mcp-parseable-server
+go build -o mcp-parseable-server ./cmd/mcp_parseable_server
 ```
 
 # Running

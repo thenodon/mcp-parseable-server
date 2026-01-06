@@ -10,13 +10,21 @@ import (
 	"mcp-pb/tools"
 )
 
+var version = "undefined"
+
 func main() {
 	mode := flag.String("mode", "http", "server mode: http or stdio")
 	parseableURL := flag.String("parseable-url", "", "base URL for Parseable instance (or set PARSEABLE_URL env var)")
 	parseableUserFlag := flag.String("parseable-username", "", "Parseable basic auth username (or set PARSEABLE_USER env var)")
 	parseablePassFlag := flag.String("parseable-password", "", "Parseable basic auth password (or set PARSEABLE_PASS env var)")
 	listenAddr := flag.String("listen", ":9034", "address to listen on")
+	versionFlag := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
+
+	if *versionFlag {
+		println("mcp-parseable-server " + version)
+		os.Exit(0)
+	}
 
 	// Prefer environment variables if set, otherwise use flags or defaults
 	tools.ParseableBaseURL = os.Getenv("PARSEABLE_URL")
@@ -49,7 +57,7 @@ func main() {
 		*listenAddr = listenAddrEnv
 	}
 
-	mcpServer := server.NewMCPServer("parseable-mcp", "0.1.0",
+	mcpServer := server.NewMCPServer("parseable-mcp", version,
 		server.WithRecovery(),
 		server.WithLogging(),
 		server.WithInstructions(`
