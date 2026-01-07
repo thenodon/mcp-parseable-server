@@ -3,7 +3,9 @@ mcp-parseable-server - A Parseable MCP Server
 
 > This project is currently in early development. Feedback and contributions are welcome.
 > 
-> Testing has been done using vscode with Github Copilot as the agent.
+> Testing has been done using:
+> - vscode with Github Copilot as the agent.
+> - opencode agent CLI tool - works from v0.2.0
 
 # Overview
 This project provides an MCP (Message Context Protocol) server for [Parseable](https://github.com/parseablehq/parseable), enabling AI agents and tools to interact with Parseable data streams (logs, metrics, traces) using natural language and structured tool calls.
