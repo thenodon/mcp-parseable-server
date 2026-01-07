@@ -2,6 +2,8 @@ package tools
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -32,17 +34,13 @@ Returned fields:
 		if err != nil {
 			return mcp.NewToolResultError("failed to get info: " + err.Error()), nil
 		}
-		fieldDescriptions := map[string]interface{}{
-			"createdAt":     "When the data stream was created (ISO 8601)",
-			"firstEventAt":  "Timestamp of the first event (ISO 8601)",
-			"latestEventAt": "Timestamp of the latest event (ISO 8601)",
-			"streamType":    "Type of data stream (e.g. UserDefined)",
-			"logSource":     "Array of log source objects",
-			"telemetryType": "Type of telemetry - logs, metrics or traces",
+		// Default: return as text
+		var lines []string
+		for k, v := range info {
+			lines = append(lines, k+": "+fmt.Sprintf("%v", v))
 		}
-		return mcp.NewToolResultStructured(map[string]interface{}{
-			"info":              info,
-			"fieldDescriptions": fieldDescriptions,
-		}, "Info returned"), nil
+		return mcp.NewToolResultText(strings.Join(lines, "\n")), nil
+		// Optionally, for structured output:
+		// return mcp.NewToolResultStructured(map[string]interface{}{"info": info}, "Info returned"), nil
 	})
 }

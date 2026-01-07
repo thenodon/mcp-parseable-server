@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -51,6 +52,9 @@ func RegisterQueryDataStreamTool(mcpServer *server.MCPServer) {
 		if err := json.Unmarshal(body, &result); err != nil {
 			return mcp.NewToolResultError("failed to parse parseable response"), nil
 		}
-		return mcp.NewToolResultStructured(map[string]interface{}{"result": result}, "Query successful"), nil
+		// Default: return as text
+		return mcp.NewToolResultText(fmt.Sprintf("%v", result)), nil
+		// Optionally, for structured output:
+		// return mcp.NewToolResultStructured(map[string]interface{}{"result": result}, "Query successful"), nil
 	})
 }

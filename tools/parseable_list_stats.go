@@ -2,6 +2,8 @@ package tools
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -39,28 +41,13 @@ Returned fields:
 		if err != nil {
 			return mcp.NewToolResultError("failed to get stats: " + err.Error()), nil
 		}
-		fieldDescriptions := map[string]interface{}{
-			"stream": "Data stream name",
-			"time":   "Stats timestamp (ISO 8601)",
-			"ingestion": map[string]string{
-				"count":          "Number of ingested records",
-				"size":           "Total bytes ingested",
-				"format":         "Data format (e.g. json)",
-				"lifetime_count": "Cumulative ingested records",
-				"lifetime_size":  "Cumulative ingested bytes",
-				"deleted_count":  "Number of deleted records",
-				"deleted_size":   "Bytes deleted",
-			},
-			"storage": map[string]string{
-				"size":          "Total bytes stored",
-				"format":        "Storage format (e.g. parquet)",
-				"lifetime_size": "Cumulative stored bytes",
-				"deleted_size":  "Bytes deleted from storage",
-			},
+		// Default: return as text
+		var lines []string
+		for k, v := range stats {
+			lines = append(lines, k+": "+fmt.Sprintf("%v", v))
 		}
-		return mcp.NewToolResultStructured(map[string]interface{}{
-			"stats":             stats,
-			"fieldDescriptions": fieldDescriptions,
-		}, "Stats returned"), nil
+		return mcp.NewToolResultText(strings.Join(lines, "\n")), nil
+		// Optionally, for structured output:
+		// return mcp.NewToolResultStructured(map[string]interface{}{"stats": stats}, "Stats returned"), nil
 	})
 }

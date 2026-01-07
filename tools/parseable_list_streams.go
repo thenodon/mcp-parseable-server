@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -16,6 +17,8 @@ func RegisterListDataStreamsTool(mcpServer *server.MCPServer) {
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
-		return mcp.NewToolResultStructured(map[string]interface{}{"streams": streams}, "Streams listed"), nil
+		//return mcp.NewToolResultStructured(map[string]interface{}{"streams": streams}, "Streams listed"), nil
+		return mcp.NewToolResultText(strings.Join(streams, "\n")), nil
+
 	})
 }
