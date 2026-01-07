@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -21,6 +22,13 @@ func RegisterGetDataStreamSchemaTool(mcpServer *server.MCPServer) {
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
-		return mcp.NewToolResultStructured(map[string]interface{}{"schema": schema}, "Schema returned"), nil
+		// Default: return as text
+		var lines []string
+		for field, typ := range schema {
+			lines = append(lines, field+": "+typ)
+		}
+		return mcp.NewToolResultText(strings.Join(lines, "\n")), nil
+		// Optionally, for structured output:
+		// return mcp.NewToolResultStructured(map[string]interface{}{"schema": schema}, "Schema returned"), nil
 	})
 }
