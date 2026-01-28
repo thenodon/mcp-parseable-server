@@ -41,7 +41,7 @@ func addBasicAuth(req *http.Request) {
 	req.SetBasicAuth(ParseableUser, ParseablePass)
 }
 
-func doParseableQuery(query string, streamName string, startTime string, endTime string) (map[string]interface{}, error) {
+func doParseableQuery(query string, streamName string, startTime string, endTime string) ([]map[string]interface{}, error) {
 	payload := map[string]string{
 		"query":      query,
 		"streamName": streamName,
@@ -61,12 +61,14 @@ func doParseableQuery(query string, streamName string, startTime string, endTime
 		return nil, err
 	}
 	defer resp.Body.Close()
-	var result interface{}
 	body, _ := io.ReadAll(resp.Body)
-	if err := json.Unmarshal(body, &result); err != nil {
+
+	// Try to unmarshal as array of rows
+	var arrResult []map[string]interface{}
+	if err := json.Unmarshal(body, &arrResult); err != nil {
 		return nil, err
 	}
-	return result.(map[string]interface{}), nil
+	return arrResult, nil
 }
 
 func listParseableStreams() ([]string, error) {
