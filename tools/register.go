@@ -8,4 +8,6 @@ func RegisterParseableTools(mcpServer *server.MCPServer) {
 	RegisterGetDataStreamSchemaTool(mcpServer)
 	RegisterGetDataStreamStatsTool(mcpServer)
 	RegisterGetDataStreamInfoTool(mcpServer)
+	RegisterGetAboutTool(mcpServer)
+	RegisterGetRolesTool(mcpServer)
 }

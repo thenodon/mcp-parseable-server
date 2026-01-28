@@ -85,14 +85,49 @@ func getParseableSchema(stream string) (map[string]string, error) {
 
 func getParseableStats(streamName string) (map[string]interface{}, error) {
 	url := ParseableBaseURL + "/api/v1/logstream/" + streamName + "/stats"
+	stats, m, err := doSimpleGet(url)
+	if err != nil {
+		return m, err
+	}
+	return stats, nil
+}
+
+func getParseableInfo(streamName string) (map[string]interface{}, error) {
+	url := ParseableBaseURL + "/api/v1/logstream/" + streamName + "/info"
+	info, m, err := doSimpleGet(url)
+	if err != nil {
+		return m, err
+	}
+	return info, nil
+}
+
+func getParseableAbout() (map[string]interface{}, error) {
+	url := ParseableBaseURL + "/api/v1/about"
+	about, m, err := doSimpleGet(url)
+	if err != nil {
+		return m, err
+	}
+	return about, nil
+}
+
+func getParseableRoles() (map[string]interface{}, error) {
+	url := ParseableBaseURL + "/api/v1/roles"
+	roles, m, err := doSimpleGet(url)
+	if err != nil {
+		return m, err
+	}
+	return roles, nil
+}
+
+func doSimpleGet(url string) (map[string]interface{}, map[string]interface{}, error) {
 	httpReq, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	addBasicAuth(httpReq)
 	resp, err := http.DefaultClient.Do(httpReq)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
@@ -101,30 +136,7 @@ func getParseableStats(streamName string) (map[string]interface{}, error) {
 	}()
 	var stats map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&stats); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return stats, nil
-}
-
-func getParseableInfo(streamName string) (map[string]interface{}, error) {
-	url := ParseableBaseURL + "/api/v1/logstream/" + streamName + "/info"
-	httpReq, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	addBasicAuth(httpReq)
-	resp, err := http.DefaultClient.Do(httpReq)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Printf("failed to close response body: %v", err)
-		}
-	}()
-	var info map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
-		return nil, err
-	}
-	return info, nil
+	return stats, nil, nil
 }
