@@ -1,9 +1,14 @@
 package tools
 
 import (
+	"bytes"
+	"crypto/tls"
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 )
 
 // These variables must be set by main.go before calling RegisterParseableTools
@@ -13,8 +18,55 @@ var (
 	ParseablePass    string
 )
 
+// package-level HTTP client; initialized in init() to respect UNSECURE env var
+var HTTPClient *http.Client
+
+func init() {
+	// UNSECURE environment variable controls whether TLS verification is skipped.
+	// Accepts the same values as strconv.ParseBool (true/1/t etc.).
+	unsecureEnv := os.Getenv("UNSECURE")
+	if ok, _ := strconv.ParseBool(unsecureEnv); ok {
+		HTTPClient = &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
+		}
+		log.Printf("UNSECURE=true: HTTP client will skip TLS verification")
+	} else {
+		HTTPClient = http.DefaultClient
+	}
+}
+
 func addBasicAuth(req *http.Request) {
 	req.SetBasicAuth(ParseableUser, ParseablePass)
+}
+
+func doParseableQuery(query string, streamName string, startTime string, endTime string) (map[string]interface{}, error) {
+	payload := map[string]string{
+		"query":      query,
+		"streamName": streamName,
+		"startTime":  startTime,
+		"endTime":    endTime,
+	}
+	jsonPayload, _ := json.Marshal(payload)
+	url := ParseableBaseURL + parseableSQLPath
+	httpReq, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return nil, err
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+	addBasicAuth(httpReq)
+	resp, err := HTTPClient.Do(httpReq)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	var result interface{}
+	body, _ := io.ReadAll(resp.Body)
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, err
+	}
+	return result.(map[string]interface{}), nil
 }
 
 func listParseableStreams() ([]string, error) {
@@ -24,7 +76,7 @@ func listParseableStreams() ([]string, error) {
 		return nil, err
 	}
 	addBasicAuth(httpReq)
-	resp, err := http.DefaultClient.Do(httpReq)
+	resp, err := HTTPClient.Do(httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +105,7 @@ func getParseableSchema(stream string) (map[string]string, error) {
 		return nil, err
 	}
 	addBasicAuth(httpReq)
-	resp, err := http.DefaultClient.Do(httpReq)
+	resp, err := HTTPClient.Do(httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +177,7 @@ func doSimpleGet(url string) (map[string]interface{}, map[string]interface{}, er
 		return nil, nil, err
 	}
 	addBasicAuth(httpReq)
-	resp, err := http.DefaultClient.Do(httpReq)
+	resp, err := HTTPClient.Do(httpReq)
 	if err != nil {
 		return nil, nil, err
 	}
