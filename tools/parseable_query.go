@@ -1,12 +1,9 @@
 package tools
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -16,7 +13,7 @@ func RegisterQueryDataStreamTool(mcpServer *server.MCPServer) {
 	mcpServer.AddTool(mcp.NewTool(
 		"query_data_stream",
 		mcp.WithDescription("Execute a SQL query against a data stream in Parseable. All fields are required. All times must be in ISO 8601 format."),
-		mcp.WithString("query", mcp.Required(), mcp.Description("SQL query to run")),
+		mcp.WithString("query", mcp.Required(), mcp.Description("SQL query to run, but the FROM must always be set to streamName")),
 		mcp.WithString("streamName", mcp.Required(), mcp.Description("Name of the data stream (table)")),
 		mcp.WithString("startTime", mcp.Required(), mcp.Description("Query start time in ISO 8601 (format: yyyy-MM-ddTHH:mm:ss+hh:mm)")),
 		mcp.WithString("endTime", mcp.Required(), mcp.Description("Query end time in ISO 8601 (format: yyyy-MM-ddTHH:mm:ss+hh:mm)")),
@@ -28,32 +25,24 @@ func RegisterQueryDataStreamTool(mcpServer *server.MCPServer) {
 		if query == "" || streamName == "" || startTime == "" || endTime == "" {
 			return mcp.NewToolResultError("missing required fields: query, streamName, startTime, and endTime are required"), nil
 		}
-		payload := map[string]string{
-			"query":      query,
-			"streamName": streamName,
-			"startTime":  startTime,
-			"endTime":    endTime,
-		}
-		jsonPayload, _ := json.Marshal(payload)
-		url := ParseableBaseURL + parseableSQLPath
-		httpReq, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
-		if err != nil {
-			return mcp.NewToolResultError("failed to create request"), nil
-		}
-		httpReq.Header.Set("Content-Type", "application/json")
-		addBasicAuth(httpReq)
-		resp, err := http.DefaultClient.Do(httpReq)
+		queryResult, err := doParseableQuery(query, streamName, startTime, endTime)
 		if err != nil {
 			return mcp.NewToolResultError("query failed: " + err.Error()), nil
 		}
-		defer resp.Body.Close()
-		var result interface{}
-		body, _ := io.ReadAll(resp.Body)
-		if err := json.Unmarshal(body, &result); err != nil {
-			return mcp.NewToolResultError("failed to parse parseable response"), nil
+
+		b, err := json.MarshalIndent(queryResult, "", "  ")
+		if err != nil {
+			return nil, err
 		}
-		// Default: return as text
-		return mcp.NewToolResultText(fmt.Sprintf("%v", result)), nil
+
+		// Optional: a one-liner summary that sets expectations.
+		text := fmt.Sprintf(
+			"Returned %d rows as JSON (array of objects). Use keys exactly as shown.\n```json\n%s\n```",
+			len(queryResult),
+			string(b),
+		)
+
+		return mcp.NewToolResultText(text), nil
 		// Optionally, for structured output:
 		// return mcp.NewToolResultStructured(map[string]interface{}{"result": result}, "Query successful"), nil
 	})

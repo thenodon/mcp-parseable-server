@@ -52,10 +52,10 @@ This mode is used for CLI or agent-to-agent workflows.
 You can configure the Parseable connection using environment variables or flags:
 
 - `PARSEABLE_URL` or `--parseable-url`- url to the parseable instance (default: http://localhost:8000)
-- `PARSEABLE_USER` or `--parseable-user` (default: admin)
-- `PARSEABLE_PASS` or `--parseable-pass` (default: admin)
+- `PARSEABLE_USERNAME` or `--parseable-user` (default: admin)
+- `PARSEABLE_PASSWORD` or `--parseable-pass` (default: admin)
 - `LISTEN_ADDR` or `--listen` - the address when running the mcp server in http mode (default: :9034)
-
+- `INSECURE` - set to `true` to skip TLS verification (default: false)`
 Example:
 ```sh
 PARSEABLE_URL="http://your-parseable-host:8000" PARSEABLE_USER="admin" PARSEABLE_PASS="admin" ./mcp-parseable-server

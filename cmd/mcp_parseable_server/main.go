@@ -35,7 +35,7 @@ func main() {
 			tools.ParseableBaseURL = "http://localhost:8000"
 		}
 	}
-	tools.ParseableUser = os.Getenv("PARSEABLE_USER")
+	tools.ParseableUser = os.Getenv("PARSEABLE_USERNAME")
 	if tools.ParseableUser == "" {
 		if *parseableUserFlag != "" {
 			tools.ParseableUser = *parseableUserFlag
@@ -43,7 +43,7 @@ func main() {
 			tools.ParseableUser = "admin"
 		}
 	}
-	tools.ParseablePass = os.Getenv("PARSEABLE_PASS")
+	tools.ParseablePass = os.Getenv("PARSEABLE_PASSWORD")
 	if tools.ParseablePass == "" {
 		if *parseablePassFlag != "" {
 			tools.ParseablePass = *parseablePassFlag
