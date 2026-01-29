@@ -94,6 +94,14 @@ Get info for a data stream.
   - `streamName`: Name of the data stream
 - **Returns:** Info object (see tool description for details)
 
+## 6. `get_parseable_about`
+Get Parseable about info.
+- **Returns:** About object (see tool description for details)
+
+## 7. `get_parseable_roles`
+Get Parseable roles.
+- **Returns:** Roles object (see tool description for details)
+
 # Example: Querying with curl
 
 1. **List streams:**
@@ -159,5 +167,6 @@ This work is licensed under the GNU GENERAL PUBLIC LICENSE Version 3.
 
 # Todo 
 - No prompts or resources are currently included for agent usage.
-- No tools to understand standalone or cluster Parseable setup.
+- No tools to understand the Parseable setups. It can by using the `about` tool understand if cluster or standalone, but nothing about the configuration.
+- No authentication mechanisms implemented. 
 - .....
