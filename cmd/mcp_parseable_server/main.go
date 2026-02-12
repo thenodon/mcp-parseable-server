@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/mark3labs/mcp-go/server"
@@ -20,6 +20,12 @@ func main() {
 	listenAddr := flag.String("listen", ":9034", "address to listen on")
 	versionFlag := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
+
+	// Setup structured logger for stdout
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}))
+	slog.SetDefault(logger)
 
 	if *versionFlag {
 		println("mcp-parseable-server " + version)
@@ -72,16 +78,18 @@ Try not to second guess information - if you don't know something or lack inform
 	tools.RegisterParseableTools(mcpServer)
 
 	if *mode == "stdio" {
-		log.Printf("MCP server running in stdio mode (Parseable at %s)", tools.ParseableBaseURL)
+		slog.Info("MCP server running in stdio mode", "parseable_url", tools.ParseableBaseURL)
 		if err := server.ServeStdio(mcpServer); err != nil {
-			log.Fatalf("MCP stdio server failed: %v", err)
+			slog.Error("MCP stdio server failed", "error", err)
+			os.Exit(1)
 		}
 		return
 	}
 
 	httpServer := server.NewStreamableHTTPServer(mcpServer)
-	log.Printf("MCP server running on %s, Parseable at %s", *listenAddr, tools.ParseableBaseURL)
+	slog.Info("MCP server running", "address", *listenAddr, "parseable_url", tools.ParseableBaseURL)
 	if err := httpServer.Start(*listenAddr); err != nil {
-		log.Fatalf("MCP server failed: %v", err)
+		slog.Error("MCP server failed", "error", err)
+		os.Exit(1)
 	}
 }

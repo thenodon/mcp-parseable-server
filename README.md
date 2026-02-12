@@ -17,6 +17,46 @@ This project provides an MCP (Message Context Protocol) server for [Parseable](h
 - Modular MCP tool registration for easy extension
 - Supports both HTTP and stdio MCP modes
 - Environment variable and flag-based configuration
+- The mcp server returns responses in json where the payload is both in text and structured format.
+
+
+# Testing
+To test the server you can use the [mcp-cli](https://github.com/philschmid/mcp-cli)
+```shell
+mcp-cli  call parseable get_roles
+``` 
+Returns 
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"admins\":[{\"privilege\":\"admin\"}],\"network_role\":[{\"privilege\":\"reader\",\"resource\":{\"stream\":\"network_logstream\"}}],\"otel_gateway\":[{\"privilege\":\"editor\"}]}"
+    }
+  ],
+  "structuredContent": {
+    "admins": [
+      {
+        "privilege": "admin"
+      }
+    ],
+    "network_role": [
+      {
+        "privilege": "reader",
+        "resource": {
+          "stream": "network_logstream"
+        }
+      }
+    ],
+    "otel_gateway": [
+      {
+        "privilege": "editor"
+      }
+    ]
+  }
+}
+
+```
 
 # Building
 
