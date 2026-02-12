@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
@@ -31,7 +31,7 @@ func init() {
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			},
 		}
-		log.Printf("UNSECURE=true: HTTP client will skip TLS verification")
+		slog.Info("UNSECURE=true: HTTP client will skip TLS verification")
 	} else {
 		HTTPClient = http.DefaultClient
 	}
@@ -60,7 +60,11 @@ func doParseableQuery(query string, streamName string, startTime string, endTime
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			slog.Error("failed to close response body", "error", err)
+		}
+	}()
 	body, _ := io.ReadAll(resp.Body)
 
 	// Try to unmarshal as array of rows
@@ -84,7 +88,7 @@ func listParseableStreams() ([]string, error) {
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Printf("failed to close response body: %v", err)
+			slog.Error("failed to close response body", "error", err)
 		}
 	}()
 	var apiResult []struct {
@@ -100,7 +104,7 @@ func listParseableStreams() ([]string, error) {
 	return streams, nil
 }
 
-func getParseableSchema(stream string) (map[string]string, error) {
+func getParseableSchema(stream string) (map[string]interface{}, error) {
 	url := ParseableBaseURL + "/api/v1/logstream/" + stream + "/schema"
 	httpReq, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -113,28 +117,14 @@ func getParseableSchema(stream string) (map[string]string, error) {
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Printf("failed to close response body: %v", err)
+			slog.Error("failed to close response body", "error", err)
 		}
 	}()
-	var result struct {
-		Fields []struct {
-			Name     string          `json:"name"`
-			DataType json.RawMessage `json:"data_type"`
-		} `json:"fields"`
-	}
+	var result map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
-	schema := make(map[string]string)
-	for _, field := range result.Fields {
-		var dtStr string
-		if err := json.Unmarshal(field.DataType, &dtStr); err == nil {
-			schema[field.Name] = dtStr
-			continue
-		}
-		schema[field.Name] = string(field.DataType)
-	}
-	return schema, nil
+	return result, nil
 }
 
 func getParseableStats(streamName string) (map[string]interface{}, error) {
@@ -185,7 +175,7 @@ func doSimpleGet(url string) (map[string]interface{}, map[string]interface{}, er
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Printf("failed to close response body: %v", err)
+			slog.Error("failed to close response body", "error", err)
 		}
 	}()
 	var stats map[string]interface{}
