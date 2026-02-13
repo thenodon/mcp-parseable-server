@@ -18,12 +18,34 @@ func main() {
 	parseableUserFlag := flag.String("parseable-username", "", "Parseable basic auth username (or set PARSEABLE_USER env var)")
 	parseablePassFlag := flag.String("parseable-password", "", "Parseable basic auth password (or set PARSEABLE_PASS env var)")
 	listenAddr := flag.String("listen", ":9034", "address to listen on")
+	logLevel := flag.String("log-level", "info", "log level: debug, info, warn, error (or set LOG_LEVEL env var)")
 	versionFlag := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
 
+	// Determine log level from environment variable or flag
+	logLevelStr := os.Getenv("LOG_LEVEL")
+	if logLevelStr == "" {
+		logLevelStr = *logLevel
+	}
+
+	// Parse log level string to slog.Level
+	var level slog.Level
+	switch logLevelStr {
+	case "debug":
+		level = slog.LevelDebug
+	case "info":
+		level = slog.LevelInfo
+	case "warn":
+		level = slog.LevelWarn
+	case "error":
+		level = slog.LevelError
+	default:
+		level = slog.LevelInfo
+	}
+
 	// Setup structured logger for stdout
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
+		Level: level,
 	}))
 	slog.SetDefault(logger)
 

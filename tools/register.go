@@ -10,4 +10,5 @@ func RegisterParseableTools(mcpServer *server.MCPServer) {
 	RegisterGetDataStreamInfoTool(mcpServer)
 	RegisterGetAboutTool(mcpServer)
 	RegisterGetRolesTool(mcpServer)
+	RegisterGetUsersTool(mcpServer)
 }
