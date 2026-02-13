@@ -19,6 +19,9 @@ This project provides an MCP (Message Context Protocol) server for [Parseable](h
 - Environment variable and flag-based configuration
 - The mcp server returns responses in json where the payload is both in text and structured format.
 
+> In Parseable dataset and data stream names are used interchangeably, as Parseable's datasets are essentially 
+> named data streams. In all tool description we try to use the term data stream to avoid confusion with the term dataset which can have different 
+> meanings in other contexts.
 
 # Testing
 To test the server you can use the [mcp-cli](https://github.com/philschmid/mcp-cli)
@@ -96,6 +99,8 @@ You can configure the Parseable connection using environment variables or flags:
 - `PARSEABLE_PASSWORD` or `--parseable-pass` (default: admin)
 - `LISTEN_ADDR` or `--listen` - the address when running the mcp server in http mode (default: :9034)
 - `INSECURE` - set to `true` to skip TLS verification (default: false)`
+- `LOG_LEVEL` - set log level. Supported levels are debug, info, warn and error (default: info)
+
 Example:
 ```sh
 PARSEABLE_URL="http://your-parseable-host:8000" PARSEABLE_USER="admin" PARSEABLE_PASS="admin" ./mcp-parseable-server
@@ -112,7 +117,7 @@ Execute a SQL query against a data stream.
   - `endTime`: ISO 8601 end time
 - **Returns:** Query result
 
-## 2. `list_data_streams`
+## 2. `get_data_streams`
 List all available data streams in Parseable.
 - **Returns:** Array of stream names
 

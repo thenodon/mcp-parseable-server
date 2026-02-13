@@ -75,33 +75,9 @@ func doParseableQuery(query string, streamName string, startTime string, endTime
 	return arrResult, nil
 }
 
-func listParseableStreams() ([]string, error) {
+func listParseableStreams() ([]map[string]interface{}, error) {
 	url := ParseableBaseURL + "/api/v1/logstream"
-	httpReq, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	addBasicAuth(httpReq)
-	resp, err := HTTPClient.Do(httpReq)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			slog.Error("failed to close response body", "error", err)
-		}
-	}()
-	var apiResult []struct {
-		Name string `json:"name"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&apiResult); err != nil {
-		return nil, err
-	}
-	streams := make([]string, 0, len(apiResult))
-	for _, s := range apiResult {
-		streams = append(streams, s.Name)
-	}
-	return streams, nil
+	return doSimpleGetArray(url)
 }
 
 func getParseableSchema(stream string) (map[string]interface{}, error) {
@@ -129,38 +105,31 @@ func getParseableSchema(stream string) (map[string]interface{}, error) {
 
 func getParseableStats(streamName string) (map[string]interface{}, error) {
 	url := ParseableBaseURL + "/api/v1/logstream/" + streamName + "/stats"
-	stats, m, err := doSimpleGet(url)
-	if err != nil {
-		return m, err
-	}
-	return stats, nil
+	stats, _, err := doSimpleGet(url)
+	return stats, err
 }
 
 func getParseableInfo(streamName string) (map[string]interface{}, error) {
 	url := ParseableBaseURL + "/api/v1/logstream/" + streamName + "/info"
-	info, m, err := doSimpleGet(url)
-	if err != nil {
-		return m, err
-	}
-	return info, nil
+	info, _, err := doSimpleGet(url)
+	return info, err
 }
 
 func getParseableAbout() (map[string]interface{}, error) {
 	url := ParseableBaseURL + "/api/v1/about"
-	about, m, err := doSimpleGet(url)
-	if err != nil {
-		return m, err
-	}
-	return about, nil
+	about, _, err := doSimpleGet(url)
+	return about, err
 }
 
 func getParseableRoles() (map[string]interface{}, error) {
 	url := ParseableBaseURL + "/api/v1/roles"
-	roles, m, err := doSimpleGet(url)
-	if err != nil {
-		return m, err
-	}
-	return roles, nil
+	roles, _, err := doSimpleGet(url)
+	return roles, err
+}
+
+func getParseableUsers() ([]map[string]interface{}, error) {
+	url := ParseableBaseURL + "/api/v1/users"
+	return doSimpleGetArray(url)
 }
 
 func doSimpleGet(url string) (map[string]interface{}, map[string]interface{}, error) {
@@ -178,9 +147,31 @@ func doSimpleGet(url string) (map[string]interface{}, map[string]interface{}, er
 			slog.Error("failed to close response body", "error", err)
 		}
 	}()
-	var stats map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&stats); err != nil {
+	var response map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, nil, err
 	}
-	return stats, nil, nil
+	return response, nil, nil
+}
+
+func doSimpleGetArray(url string) ([]map[string]interface{}, error) {
+	httpReq, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	addBasicAuth(httpReq)
+	resp, err := HTTPClient.Do(httpReq)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			slog.Error("failed to close response body", "error", err)
+		}
+	}()
+	var response []map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, err
+	}
+	return response, nil
 }
