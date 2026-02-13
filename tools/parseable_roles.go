@@ -33,13 +33,12 @@ Use this tool to understand access controls before querying or ingesting data.
 For detailed RBAC documentation, see: https://www.parseable.com/docs/user-guide/rbac
 `),
 	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		slog.Info("fetching roles information")
 		roles, err := getParseableRoles()
 		if err != nil {
 			slog.Error("failed to get roles", "error", err)
 			return mcp.NewToolResultError(err.Error()), nil
 		}
-		slog.Info("successfully retrieved roles", "count", len(roles))
+
 		return mcp.NewToolResultJSON(roles)
 	})
 }
