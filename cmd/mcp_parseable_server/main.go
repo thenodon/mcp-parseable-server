@@ -7,6 +7,7 @@ import (
 
 	"github.com/mark3labs/mcp-go/server"
 
+	"mcp-pb/prompts"
 	"mcp-pb/tools"
 )
 
@@ -98,6 +99,7 @@ Try not to second guess information - if you don't know something or lack inform
 	)
 
 	tools.RegisterParseableTools(mcpServer)
+	prompts.RegisterParseablePrompts(mcpServer)
 
 	if *mode == "stdio" {
 		slog.Info("MCP server running in stdio mode", "parseable_url", tools.ParseableBaseURL)
