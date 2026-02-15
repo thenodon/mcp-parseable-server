@@ -1,15 +1,19 @@
 mcp-parseable-server - A Parseable MCP Server 
 ----------------------
 
-> This project is currently in early development. Feedback and contributions are welcome.
-> 
+> This project is currently in early development with focus on log data. 
+> Feedback and contributions are welcome.
+
 > Testing has been done using:
 > - vscode with Github Copilot as the agent.
-> - opencode agent CLI tool - works from v0.2.0
+> - opencode agent CLI tool 
 
+[TOC]
+---
 # Overview
 This project provides an MCP (Message Context Protocol) server for [Parseable](https://github.com/parseablehq/parseable), enabling AI agents and tools to interact with Parseable data streams (logs, metrics, traces) using natural language and structured tool calls.
 
+---
 # Features
 - List available data streams in Parseable
 - Query data streams using SQL
@@ -19,48 +23,22 @@ This project provides an MCP (Message Context Protocol) server for [Parseable](h
 - Environment variable and flag-based configuration
 - The mcp server returns responses in json where the payload is both in text and structured format.
 
-> In Parseable dataset and data stream names are used interchangeably, as Parseable's datasets are essentially 
-> named data streams. In all tool description we try to use the term data stream to avoid confusion with the term dataset which can have different 
+
+> In Parseable dataset and data stream names are used interchangeably, as Parseable's datasets are essentially
+> named data streams. In all tool description we try to use the term data stream to avoid confusion with the term dataset which can have different
 > meanings in other contexts.
 
-# Testing
-To test the server you can use the [mcp-cli](https://github.com/philschmid/mcp-cli)
-```shell
-mcp-cli  call parseable get_roles
-``` 
-Returns 
-```json
-{
-  "content": [
-    {
-      "type": "text",
-      "text": "{\"admins\":[{\"privilege\":\"admin\"}],\"network_role\":[{\"privilege\":\"reader\",\"resource\":{\"stream\":\"network_logstream\"}}],\"otel_gateway\":[{\"privilege\":\"editor\"}]}"
-    }
-  ],
-  "structuredContent": {
-    "admins": [
-      {
-        "privilege": "admin"
-      }
-    ],
-    "network_role": [
-      {
-        "privilege": "reader",
-        "resource": {
-          "stream": "network_logstream"
-        }
-      }
-    ],
-    "otel_gateway": [
-      {
-        "privilege": "editor"
-      }
-    ]
-  }
-}
+---
+# Limitations 
+## Authentication
+The mcp server does not implement any authentication mechanisms. If this is needed, use a reverse proxy like nginx or envoy 
+in front of the mcp server to add authentication and authorization. 
 
-```
+## MCP session management
+The mcp server does not implement any session management since all tool calls are stateless. This may change in the 
+future.
 
+---
 # Building
 
 Ensure you have Go 1.20+ installed.
@@ -72,6 +50,7 @@ cd mcp-parseable-server
 go build -o mcp-parseable-server ./cmd/mcp_parseable_server
 ```
 
+---
 # Running
 
 ## HTTP Mode (default)
@@ -90,6 +69,7 @@ The MCP server will listen on `http://localhost:9034/mcp` for agent/tool request
 
 This mode is used for CLI or agent-to-agent workflows.
 
+---
 # Configuration
 
 You can configure the Parseable connection using environment variables or flags:
@@ -105,8 +85,18 @@ Example:
 ```sh
 PARSEABLE_URL="http://your-parseable-host:8000" PARSEABLE_USER="admin" PARSEABLE_PASS="admin" ./mcp-parseable-server
 ```
+---
+# Production deployment
+For production deployment use a reverse proxy like nginx or envoy in front of the mcp server that manages 
+authentication, authorization, and tls termination.
 
-# MCP Tools
+---
+# Testing
+
+See [TESTING.md](TESTING.md) for a complete testing guide.
+
+---
+# MCP Tools Reference
 
 ## 1. `query_data_stream`
 Execute a SQL query against a data stream.
@@ -115,14 +105,14 @@ Execute a SQL query against a data stream.
   - `streamName`: Name of the data stream
   - `startTime`: ISO 8601 start time (e.g. 2026-01-01T00:00:00+00:00)
   - `endTime`: ISO 8601 end time
-- **Returns:** Query result
+- **Returns:** Query result and the row count returned
 
 ## 2. `get_data_streams`
 List all available data streams in Parseable.
-- **Returns:** Array of stream names
+- **Returns:** Array of stream objects with count
 
 ## 3. `get_data_stream_schema`
-Get the schema for a specific data stream.
+Get the fields schema for a specific data stream.
 - **Inputs:**
   - `stream`: Name of the data stream
 - **Returns:** Schema fields and types
@@ -139,79 +129,84 @@ Get info for a data stream.
   - `streamName`: Name of the data stream
 - **Returns:** Info object (see tool description for details)
 
-## 6. `get_parseable_about`
+## 6. `get_about`
 Get Parseable about info.
 - **Returns:** About object (see tool description for details)
 
-## 7. `get_parseable_roles`
+## 7. `get_roles`
 Get Parseable roles.
 - **Returns:** Roles object (see tool description for details)
 
-# Example: Querying with curl
+## 8. `get_users`
+Get all configured users.
+- **Returns:** Users array with count
 
-1. **List streams:**
-```sh
-curl -X POST http://localhost:8080/mcp \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 1,
-    "method": "callTool",
-    "params": { "tool": "list_data_streams", "arguments": {} }
-  }'
-```
+---
+# MCP Prompts Reference
 
-2. **Query a stream:**
-```sh
-curl -X POST http://localhost:8080/mcp \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 2,
-    "method": "callTool",
-    "params": {
-      "tool": "query_data_stream",
-      "arguments": {
-        "query": "SELECT COUNT(*) FROM log WHERE body ILIKE '%clamd%'",
-        "streamName": "otellogs",
-        "startTime": "2026-01-01T00:00:00+00:00",
-        "endTime": "2026-01-06T00:00:00+00:00"
-      }
-    }
-  }'
-```
+The server provides 5 pre-built prompts for common workflows:
 
-3. **Get schema for a stream:**
-```sh
-curl -X POST http://localhost:8080/mcp \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 3,
-    "method": "callTool",
-    "params": {
-      "tool": "get_data_stream_schema",
-      "arguments": {
-        "stream": "otellogs"
-      }
-    }
-  }'
-```
+1. **analyze-errors** - Find and analyze error logs
+2. **stream-health-check** - Perform comprehensive health assessment
+3. **investigate-field** - Deep dive into field values and distributions
+4. **compare-streams** - Compare metrics across multiple streams
+5. **find-anomalies** - Detect unusual patterns and anomalies
 
+For detailed documentation and examples, see [PROMPTS_GUIDE.md](PROMPTS_GUIDE.md).
+
+---
 # Tool Discovery
 
-Agents can discover all available tools and their input/output schemas via the MCP protocol. Each tool description includes details about returned fields and their meanings.
+Agents can discover all available tools and their input/output schemas via the MCP protocol. 
+Each tool description includes details about returned fields and their meanings.
 
+---
 # Extending
 
-To add new tools, create a new file in `tools/`, implement the registration function, and add it to `RegisterParseableTools` in `tools/register.go`.
+To add new tools, create a new file in `tools/`, implement the registration function, and add it to 
+`RegisterParseableTools` in `tools/register.go`.
 
+---
+# Troubleshooting
+
+## PARSEABLE_URL connection issues
+Verify connection to Parseable:
+```bash
+curl -u admin:<password> http://localhost:8000/api/v1/about
+```
+## Agent times out on queries
+- Reduce query time range
+- Add LIMIT clauses to SQL queries
+- Check if Parseable is responsive
+
+## Agent can't find streams
+- Verify streams exist: ask agent to "list all streams"
+- Check stream names are exact matches (case-sensitive)
+- Verify Parseable has data in the streams
+
+## Empty prompt responses
+Check that:
+- Stream name exists and has data
+- Time range includes actual events
+- PARSEABLE_URL, USER, PASS are correct
+
+## Agent returns incomplete data
+- Check that time range contains data
+- Verify PARSEABLE_USER has permissions for the streams
+- Use agent's troubleshooting capabilities to debug
+
+## MCP server not starting
+Check:
+- Port 9034 is available (for HTTP mode)
+- Environment variables are set
+- Go version is 1.20+ (`go version`)
+
+---
 # License
 
 This work is licensed under the GNU GENERAL PUBLIC LICENSE Version 3.
 
+---
 # Todo 
-- No prompts or resources are currently included for agent usage.
+- No resources are currently included for agent usage (prompts are implemented).
 - No tools to understand the Parseable setups. It can by using the `about` tool understand if cluster or standalone, but nothing about the configuration.
-- No authentication mechanisms implemented. 
-- .....
