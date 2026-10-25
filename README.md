@@ -1,3 +1,7 @@
+> ⚠️ **Notice:** This repository has been archived. It is now in a read-only state. 
+> No new issues or pull requests will be accepted. The code remains available here for historical reference, cloning, and forking.
+> Please use https://github.com/parseablehq/parseable-mcp-server
+
 mcp-parseable-server - A Parseable MCP Server 
 ----------------------
 
